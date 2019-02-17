@@ -1,0 +1,7 @@
+#!/bin/bash
+declare STATE;
+while read line;
+do
+    STATE=$("$@" $STATE $line)
+done
+echo $STATE

@@ -1,0 +1,95 @@
+#!/usr/bin/Rscript
+suppressMessages(library(tidyverse))
+
+plotters = list()
+
+plotters[["index"]] = function(df) {
+    df %>%
+        mutate(index = 1:nrow(df)) %>%
+        gather(key, value, -index) %>%
+        ggplot(aes(x=index, y=value, colour=key)) +
+        geom_line()
+}
+
+plotters[["scatter"]] = function(df) {
+    p = ggplot(df)
+    
+    if (ncol(df) == 1) p = p + geom_dotplot(aes(x=X1))
+    if (ncol(df) == 2) p = p + geom_point(aes(x=X1, y=X2))
+    if (ncol(df) == 3) p = p + geom_point(aes(x=X1, y=X2, colour=X3))
+    if (ncol(df) == 4) p = p + geom_point(aes(x=X1, y=X2, colour=X3)) + facet_wrap(~X4, ncol=1)
+    if (ncol(df) == 5) p = p + geom_point(aes(x=X1, y=X2, colour=X3)) + facet_grip(X4~X5)
+    p
+}
+
+plotters[["series"]] = function(df) {
+    p = ggplot(df)
+    
+    if (ncol(df) == 1) p = plotters$index(df)
+    if (ncol(df) == 2) p = p + geom_line(aes(x=X1, y=X2))
+    if (ncol(df) == 3) p = p + geom_line(aes(x=X1, y=X2, colour=X3))
+    if (ncol(df) == 4) p = p + geom_line(aes(x=X1, y=X2, colour=X3)) + facet_wrap(~X4, ncol=1)
+    if (ncol(df) == 5) p = p + geom_line(aes(x=X1, y=X2, colour=X3)) + facet_grid(X4~X5)
+    p
+}
+
+cmd = commandArgs(TRUE)[[1]]
+
+if (cmd == "help") {
+    msg = paste(
+        "Produce plots from CSV data on stdin.",
+        "",
+        "Usage: rplot CMD where CMD is one of:",
+        "",
+        "index: plot row values by index, one trace for each column",
+        "scatter: plot X1 ~ X2 (points), colour = X3, faceted X4~X5, or ~X4 if no X5",
+        "series: plot X2 ~ X1 (lines), colour = X3, faceted X4~X5, or ~X4 if no X5",
+        "help: display this help and exit",
+        "",
+        "Writes plot to PDF: Rplot `date time`",
+        sep="\n"
+    )
+
+    message(msg)
+    quit("no", status=1)
+}
+
+p.cmd = plotters[[cmd]]
+
+if (is.null(p.cmd)) {
+    message("[plot] error: ", cmd, "is not a recognised command.")
+    message("[plot] see `plot help`")
+    quit("no", status=1)
+}
+
+suppressMessages({
+    df = read_csv(file("stdin"), col_names=FALSE)
+    p = plotters[[cmd]](df)
+
+    # each facet should be at least this size
+    f.size.x = 4
+    f.size.y = 3
+
+    # make the end plot bigger depending on number of facets
+    f.size.x.mult = 1
+    f.size.y.mult = 1
+
+    if (ncol(df) == 4) {
+        f.size.y.mult = df$X4 %>% unique() %>% length()
+    }
+
+    if (ncol(df) == 5) {
+        f.size.x.mult = df$X4 %>% unique() %>% length()
+        f.size.y.mult = df$X5 %>% unique() %>% length()
+    }
+
+    pdf(
+        file=paste0("Rplot ", Sys.time(), ".pdf"),
+        width = f.size.x * f.size.x.mult,
+        height = f.size.y * f.size.y.mult
+    )
+
+    print(p)
+
+    invisible(dev.off())
+})
