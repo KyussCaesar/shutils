@@ -1,0 +1,10 @@
+[package]
+name = "s256"
+version = "0.1.0"
+authors = ["Antony Southworth <antony.southworth@quantiful.co.nz>"]
+edition = "2018"
+
+[dependencies]
+sha2 = "0.8"
+hex = "0.3"
+
