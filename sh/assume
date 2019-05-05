@@ -1,0 +1,29 @@
+#!/bin/bash
+
+if [ "$#" != "1" ]; then
+    echo "assume: Assume the specified IAM Role"
+    echo
+    echo "Usage: assume <role name>"
+    echo
+    echo "Assumes the specified IAM role and spawns a new shell"
+    echo "with the temporary credentials defined in it's environment."
+    echo "Also defines a variable called ASSUMED_ROLE which you can"
+    echo "use to check if you are in a shell which was spawned by this command."
+    echo
+    echo "note: your current AWS user needs to have permission to assume the specified role."
+    exit 1
+fi
+
+CREDENTIALS=$(
+    aws sts assume-role \
+    --role-session-name antony-test \
+    --role-arn arn:aws:iam::579445444291:role/$1 \
+    --output json
+)
+
+AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | jq -r .Credentials.SecretAccessKey) \
+AWS_ACCESS_KEY_ID=$(echo $CREDENTIALS | jq -r .Credentials.AccessKeyId) \
+AWS_SESSION_TOKEN=$(echo $CREDENTIALS | jq -r .Credentials.SessionToken) \
+ASSUMED_ROLE=$(echo $CREDENTIALS | jq -r .AssumedRoleUser.Arn | cut -f2 -d'/') \
+bash -i
+
