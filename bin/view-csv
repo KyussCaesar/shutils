@@ -1,0 +1,15 @@
+#!/bin/bash
+# view csv files
+#
+# author: Antony Southworth <antony.southworth@quantiful.co.nz>
+#
+# usage: view-csv [file]
+
+if [ $# -ne 1 ]; then
+  echo "error: requires exactly 1 argument."
+fi
+
+<"$1" xsv fmt -t '\t' \
+| column -s "$(echo -ne '\t')" -t \
+| vim -n -u NONE -c'set nowrap' -c'set mouse=a' -
+

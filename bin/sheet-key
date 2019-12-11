@@ -1,0 +1,11 @@
+#!/bin/bash
+# pull out the sheet key from the URL
+# uses regex defined in IETF RFC 3986, Appendix B
+# https://tools.ietf.org/html/rfc3986?#appendix-B
+for arg in $@
+do
+  echo "$1" \
+    | gsed -E -e 's|^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?|\5|' \
+    | cut -f4 -d/
+done
+

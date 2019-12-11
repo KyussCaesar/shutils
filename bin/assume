@@ -14,10 +14,12 @@ if [ "$#" != "1" ]; then
     exit 1
 fi
 
+ROLE_NAME="$1"
+shift
 CREDENTIALS=$(
     aws sts assume-role \
     --role-session-name antony-test \
-    --role-arn arn:aws:iam::579445444291:role/$1 \
+    --role-arn arn:aws:iam::579445444291:role/$ROLE_NAME \
     --output json
 )
 
@@ -25,5 +27,5 @@ AWS_SECRET_ACCESS_KEY=$(echo $CREDENTIALS | jq -r .Credentials.SecretAccessKey) 
 AWS_ACCESS_KEY_ID=$(echo $CREDENTIALS | jq -r .Credentials.AccessKeyId) \
 AWS_SESSION_TOKEN=$(echo $CREDENTIALS | jq -r .Credentials.SessionToken) \
 ASSUMED_ROLE=$(echo $CREDENTIALS | jq -r .AssumedRoleUser.Arn | cut -f2 -d'/') \
-bash -i
+bash $@
 

@@ -1,0 +1,7 @@
+#!/bin/bash
+cat $1 \
+| xsv select date \
+| xsv frequency --limit 0 \
+| xsv sort \
+| xsv select value \
+| wc -l

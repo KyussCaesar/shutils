@@ -1,23 +1,61 @@
 #!/bin/bash
-if [ "$#" != "2" ]; then
-    echo "for lines in input, prepend the date and time, and write the result to"
-    echo "file, or stdout if file is '-'"
-    echo "usage: tlog <log name> <log file>"
-    exit 1
+# annotate lines with date and time
+# author: Antony Southworth <antony.southworth@quantiful.co.nz>
+#
+# usage: tlog <files...>
+#
+# options:
+#
+#   --help: display this help and exit
+#
+# prepends each line on stdin with the date and time (ISO 8601), and appends
+# the result to each file.
+#
+# passes its input unchanged onto stdout, for use in pipelines.
+#
+# if no files are specified, presents the result on stdout instead.
+
+if [ "$1" = "--help" ]
+then
+  cat "$(realpath $0)" \
+  | head -n16 \
+  | tail -n15 \
+  | sed -e 's/^# //g' -e 's/^#//g'
+  exit 1
 fi
 
-if [ "$2" != "-" ]; then
-    echo > $2
+FILES=$@
+
+annotate () {
+  echo "[$(date +"%Y-%m-%dT%H:%M:%S%z")] ${line}"
+}
+
+# just echo the line on stdout
+print-noargs () {
+  annotate $1
+}
+
+# echo input unchanged on stdout, then append the annotated line into
+# each file.
+print-normal () {
+  echo "$1"
+  for file in $FILES
+  do
+    annotate $1 >> $file
+  done
+}
+
+# use noargs if there were... no args
+# otherwise use normal
+if [ $# -eq 0 ]
+then
+  CMD=print-noargs
+else
+  CMD=print-normal
 fi
 
-while read -r line;
+while IFS= read -r line;
 do
-    CMD='echo $(date +"%Y-%m-%d | %H:%M:%S%z") | $1 | ${line}'
-    if [ "$2" == "-" ]; then
-        echo "$(date +"%Y-%m-%d | %H:%M:%S%z") | $1 | ${line}"
-    else
-        echo "$(date +"%Y-%m-%d | %H:%M:%S%z") | $1 | ${line}" >> $2
-        echo ${line}
-    fi
+  $CMD "$line"
 done
 

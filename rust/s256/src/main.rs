@@ -21,7 +21,7 @@ fn main()
         }
     }
 
-    println!("{}", hex::encode(hasher.result()));
+    print!("{}", hex::encode(hasher.result()));
 
     exit(0);
 }

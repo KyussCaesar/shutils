@@ -1,0 +1,19 @@
+#!/bin/bash
+# Track docker stats of running container.
+# You should manually stop this with ctrl-C when your process is complete
+CONTAINER_ID=$(docker ps | grep enhanced-forecasts/main | tr -s ' ' | cut -f1 -d' ')
+LOGFILE=dstats-log-"$(date +'%Y_%m_%d-%H:%M:%S')"
+echo $(head -n1 dstats.headers) > $LOGFILE
+while :;
+do
+    docker stats --no-stream $CONTAINER_ID \
+    | grep -v CONTAINER \
+    | sed 's/MiB/*1000000/g' \
+    | sed 's/GiB/*1000000000/g' \
+    | sed 's/[%/GMB]//g' \
+    | tr -s ' ' \
+    | tr ' ' ',' \
+    >> $LOGFILE
+    sleep 1
+done
+

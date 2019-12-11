@@ -1,0 +1,141 @@
+#!/bin/bash
+# Find and open files for editing.
+#
+# Usage: edit [ --find | --grep ] <names...> [ '--' <options...> ]
+#
+# The --find/--grep flags set the search mode, which is used to select files:
+#
+#   --find: use `find . -name <name>` to select files. This is the default.
+#   --grep: use `rg --files-with-matches <name>` to select files.
+#
+# For each name, use the search method to select files.
+# The complete list of files is passed to your $EDITOR.
+# If $EDITOR is not set, uses one of vim, nano, vi, ed; whichever can be found
+# first.
+#
+# Any options (arguments after `--`) will be forwarded to the editor which is used.
+
+
+# Examples:
+#
+#   BASIC USAGE:
+#
+#   # find all files called 'foobar.cfg', and open them with the default editor.
+#   edit foobar.cfg
+#
+#   # find all files containing the pattern 'hello world', and open them with the default editor.
+#   edit --grep 'hello world'
+#
+#
+#   FORCING A SPECIFIC EDITOR TO BE USED:
+#
+#   # find all files called 'foobar.cfg', and ensure they are opened with vim.
+#   EDITOR=vim edit 'foobar.cfg'
+#
+#
+#   PASSING OPTIONS TO THE EDITOR
+#
+#   # find all files called 'baz', and open them with nano.
+#   # also provide the -m switch to nano, which enabled mouse support.
+#   EDITOR=nano edit baz -- -m
+#
+#
+#   ADVANCED USAGE
+#
+#   # find all files that define a Python function called `frobinate`.
+#   # open the files in vim, in vertical splits
+#   EDITOR=vim edit --grep 'def frobinate\(' -- -O
+
+set -e
+
+# uses the users $EDITOR, if set.
+# otherwise, will use one of vim, nano, vi, ed; whichever is found first.
+EDITORS="vim nano vi ed"
+for editor in $EDITORS
+do
+  if [ -z "$EDITOR" ]
+  then
+    if which $editor &>/dev/null
+    then
+      EDITOR=$(which $editor)
+      break
+    fi
+  else
+    break
+  fi
+done
+
+# bail if we still don't know what editor to use
+if [ -z "$EDITOR" ]
+then
+  echo "error: could not find an editor to use"
+  echo "tried to use the following editors: $EDITORS"
+  exit 1
+fi
+
+# process args
+FILES=
+OPTS=
+
+SEARCH_MODE="--find"
+
+# while loop; so you can override by specifying more than once
+while :;
+do
+  case "$1" in
+    --find)
+      # will treat args as filenames to search for
+      SEARCH_MODE=--find
+      shift
+      ;;
+
+    --grep)
+      # will treat args as patterns to search for
+      SEARCH_MODE=--grep
+      shift
+      ;;
+
+    *)
+      # not a recognised option/flag, so stop processing and treat the rest as files
+      break
+  esac
+done
+
+while [ $# -ne 0 ]
+do
+  if [ "$1" = "--" ]
+  then
+    # the rest are options; 
+    shift
+    OPTS="$@"
+    break
+
+  else
+    # dispatch depending on search mode
+    if [ "$SEARCH_MODE" = "--find" ]
+    then
+      add=$(find . -name "$1")
+
+    elif [ "$SEARCH_MODE" = "--grep" ]
+    then
+      add=$(rg --files-with-matches "$1")
+
+    fi
+
+    # add to the list of files
+    # hopefully no names with spaces! :D
+    FILES="$FILES $add"
+    shift
+
+  fi
+done
+
+# print the list of files, so you can see which ones are being opened
+# helpful for diagnostic, if a pattern is not working properly
+for file in $(echo $FILES | sort)
+do
+  echo $file
+done
+
+$EDITOR $OPTS $FILES
+

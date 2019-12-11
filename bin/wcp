@@ -6,14 +6,16 @@ import textwrap
 from shutil import copy
 from pathlib import Path
 
-def try_else(a, b):
+def try_else(a, b, etype=Exception):
     try:
         return a()
-    except:
+    except etype:
         return b()
+
 
 def print_usage():
     print(textwrap.dedent(main.__doc__)[1:-1])
+
 
 def main():
     """
