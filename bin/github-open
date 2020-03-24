@@ -1,0 +1,5 @@
+#!/bin/bash
+THEURL="https://github.com/Quantiful/$(basename $(git rev-parse --show-toplevel))/tree/$(git rev-parse --abbrev-ref HEAD)/$(git rev-parse --show-prefix)$1"
+echo $THEURL
+open $THEURL
+
