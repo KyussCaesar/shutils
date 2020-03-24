@@ -1,0 +1,12 @@
+#!/bin/bash
+# Multiply each number by the first number
+set -euo pipefail
+
+scale=$1
+shift
+
+for x in "$@"
+do
+  echo "$scale * $x" | bc -l
+done
+
