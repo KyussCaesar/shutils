@@ -1,0 +1,65 @@
+#!/bin/bash
+
+set -e
+
+if [ $# -eq 0 ]
+then
+  cat <<EOF
+usage: bisect <lower bound>  [ <higher bound> ]
+
+Binary search the specified range.
+
+At the prompt, enter \`hi\` if it needs to be higher, \`lo\` if it needs to be
+lower. Enter \`back\` to go back.
+
+If the higher bound is omitted, we double the lower bound and use that as the
+guess. If it's too small, we keep doubling until we find one too large, then
+binary search between the last two guesses.
+
+EOF
+fi
+
+LO=$1
+
+HI=$2
+
+OLD_LO=$LO
+OLD_HI=$HI
+
+while :;
+do
+  if [ -z $HI ]
+  then
+    GUESS=$(echo "2 * $LO" | bc -l)
+
+  else
+    GUESS=$(echo "($HI + $LO) / 2" | bc -l)
+
+  fi
+
+  echo "try: $GUESS"
+  read -r input
+
+  case $input in
+    hi)
+      OLD_LO=$LO
+      LO=$GUESS
+      ;;
+
+    lo)
+      OLD_HI=$HI
+      HI=$GUESS
+      ;;
+
+    back)
+      LO=$OLD_LO
+      HI=$OLD_HI
+      ;;
+
+    *)
+      exit
+      ;;
+
+  esac
+
+done
