@@ -1,9 +1,41 @@
 #!/bin/bash
+set -euo pipefail
+
+CONTAINER_NAME="runr-$(pwd)"
+
+get-port-binding () {
+  sleep 2
+
+  while :;
+  do
+    BINDING=$(docker port $CONTAINER_NAME 2>/dev/null | cut -f2 -d':')
+
+    if [ -z "$BINDING" ]; then
+      sleep 1
+
+    else
+      printf "RStudio server has started. Login details:\r\n\r\n"
+      printf "url: http://localhost:$BINDING\r\n"
+      exit 0
+
+    fi
+
+  done
+
+}
+
+get-port-binding &
+
+# tell the OS to bind to a random available port on the loopback interface
+# this is more secure so it's not available from other machines on the network
+
 docker run \
   --rm -it \
-  -p 127.0.0.1:8787:8787 \
+  --name "$CONTAINER_NAME" \
+  -p 127.0.0.1:0:8787 \
   -e DISABLE_AUTH=true \
   -v "$(pwd)":/home/rstudio/ \
+  -w /home/rstudio \
   rocker/verse:latest \
   "$@"
 

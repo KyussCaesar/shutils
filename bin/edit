@@ -36,7 +36,7 @@
 #   PASSING OPTIONS TO THE EDITOR
 #
 #   # find all files called 'baz', and open them with nano.
-#   # also provide the -m switch to nano, which enabled mouse support.
+#   # also provide the -m switch to nano, which enables mouse support.
 #   EDITOR=nano edit baz -- -m
 #
 #
