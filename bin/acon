@@ -1,0 +1,24 @@
+#!/bin/bash
+# opens the AWS Console for the specified services
+set -euo pipefail
+
+AWS_REGION=$(python3 -c 'import boto3; print(boto3.Session().region_name)')
+
+for x in "$@"
+do
+  case "$x" in
+    s3)
+      open "https://s3.console.aws.amazon.com/s3/home"
+      ;;
+
+    ecs)
+      open "https://$AWS_REGION.console.aws.amazon.com/ecs/home"
+      ;;
+
+    ec2)
+      open "https://ap-southeast-2.console.aws.amazon.com/ec2/v2/home?region=ap-southeast-2#Instances:sort=instanceState"
+      ;;
+
+  esac
+done
+

@@ -1,0 +1,16 @@
+#!/bin/bash
+set -euo pipefail
+
+t1=${1}
+
+t2=${2} # TODO: or "now"
+
+units=${3:-mins}
+
+fmt=${4:-%Y-%m-%d %H:%M:%S}
+
+R --slave --vanilla <<EOF
+dt = strptime("$t2", format = "$fmt") - strptime("$t1", format = "$fmt")
+cat(sprintf("%f\n", as.double(dt, units = "$units")))
+EOF
+
