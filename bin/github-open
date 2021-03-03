@@ -1,5 +1,17 @@
 #!/bin/bash
-THEURL="https://github.com/Quantiful/$(basename $(git rev-parse --show-toplevel))/tree/$(git rev-parse --abbrev-ref HEAD)/$(git rev-parse --show-prefix)$1"
+set -euo pipefail
+
+ref=$(git rev-parse --abbrev-ref HEAD)
+if [ "$ref" = HEAD ]
+then
+  # detached-HEAD state
+  # use commit instead
+  ref=$(git rev-parse HEAD)
+fi
+
+file=${1:-}
+
+THEURL="https://github.com/southworthy/$(basename $(git rev-parse --show-toplevel))/tree/$ref/$(git rev-parse --show-prefix)$file"
 echo $THEURL
 open $THEURL
 

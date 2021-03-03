@@ -1,0 +1,8 @@
+#!/bin/bash
+set -euo pipefail
+
+old=$1
+new=$2
+
+echo $(echo "100 * (($new - $old) / $old)" | bc -l | head -c5)%
+

@@ -50,26 +50,29 @@ set -e
 
 # uses the users $EDITOR, if set.
 # otherwise, will use one of vim, nano, vi, ed; whichever is found first.
-EDITORS="vim nano vi ed"
-for editor in $EDITORS
-do
-  if [ -z "$EDITOR" ]
+detect_editor () {
+  if ! [ -z "$EDITOR" ]
   then
-    if which $editor &>/dev/null
-    then
-      EDITOR=$(which $editor)
-      break
-    fi
-  else
-    break
+    return 0
   fi
-done
+
+  local EDITORS=(vim nano vi ed)
+  for editor in "${EDITORS[@]}"
+  do
+    if command -v "$editor" &>/dev/null
+    then
+      export EDITOR=$(which "$editor")
+      return 0
+    fi
+  done
+}
+
+detect_editor
 
 # bail if we still don't know what editor to use
 if [ -z "$EDITOR" ]
 then
-  echo "error: could not find an editor to use"
-  echo "tried to use the following editors: $EDITORS"
+  echo "error: could not find an editor to use" >&2
   exit 1
 fi
 
@@ -78,6 +81,7 @@ FILES=
 OPTS=
 
 SEARCH_MODE="--find"
+SEARCH_DIR="$(pwd)"
 
 # while loop; so you can override by specifying more than once
 while :;
@@ -93,6 +97,18 @@ do
       # will treat args as patterns to search for
       SEARCH_MODE=--grep
       shift
+      ;;
+
+    --dir | -d)
+      # which dir to search from (default= working directory)
+      shift
+      SEARCH_DIR="$1"
+      shift
+      ;;
+
+    --* | -*)
+      echo "$1: not a recognised option." >&2
+      exit 1
       ;;
 
     *)
@@ -114,11 +130,11 @@ do
     # dispatch depending on search mode
     if [ "$SEARCH_MODE" = "--find" ]
     then
-      add=$(find . -name "$1")
+      add=$(find "$SEARCH_DIR" -name "$1")
 
     elif [ "$SEARCH_MODE" = "--grep" ]
     then
-      add=$(rg --files-with-matches "$1")
+      add=$(rg --files-with-matches "$1" "$SEARCH_DIR")
 
     fi
 
